@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    networks:
+      - neural_network_net
+    volumes:
+      - "C:/Users/Eliharison/Documents/GitHub/neural_network/artifacts:/app/artifacts" 
+    environment:
+      MONGO_URI: mongodb://mongo:27017/ 
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: "nvidia"
+              count: 1
+              capabilities: [gpu]
+    runtime: nvidia
+    
+networks:
+  neural_network_net:
+    driver: bridge

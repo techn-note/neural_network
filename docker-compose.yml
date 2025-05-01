@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27018:27017"  
+    networks:
+      - neural_network_net
+    volumes:
+      - mongo_data:/data/db
+
+  neural_network:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neural_network
+    depends_on:
+      - mongo
+    networks:
+      - neural_network_net
+    volumes:
+      - "C:/Users/Eliharison/Documents/GitHub/neural_network/artifacts:/app/artifacts" 
+    environment:
+      MONGO_URI: mongodb://mongo:27017/ 
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      TF_FORCE_GPU_ALLOW_GROWTH: "true"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: "nvidia"
+              count: 1
+              capabilities: [gpu]
+    runtime: nvidia
+
+networks:
+  neural_network_net:
+    driver: bridge
+
+volumes:
+  mongo_data:

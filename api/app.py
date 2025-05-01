@@ -1,51 +1,51 @@
-from fastapi import FastAPI
+from flask import Flask, request, jsonify
 import joblib
 import tensorflow as tf
 import numpy as np
-from pydantic import BaseModel
+import os
 
-app = FastAPI()
+app = Flask(__name__)
 
 # Carrega artefatos
-scaler = joblib.load("artifacts/scaler.pkl")
-ohe = joblib.load("artifacts/ohe.pkl")
-model = tf.keras.models.load_model("artifacts/modelo_tilapia.h5")
+scaler = joblib.load("/app/artifacts/scaler.pkl")
+ohe = joblib.load("/app/artifacts/ohe.pkl")
+model = tf.keras.models.load_model("/app/artifacts/modelo_tilapia.h5")
 
-class PredictionRequest(BaseModel):
-    temperatura: float
-    ph: float
-    tds: float
-    volume: float
-    fase: str     # Ex: "alevino"
-    hora: int     # 0-23
+@app.route("/predict", methods=["POST"])
+def predict():
+    try:
+        # Recebe os dados da requisição
+        data = request.get_json()
+        temperatura = data["temperatura"]
+        ph = data["ph"]
+        tds = data["tds"]
+        volume = data["volume"]
+        fase = data["fase"]
+        hora = data["hora"]
 
-@app.post("/predict")
-def predict(request: PredictionRequest):
-    # Codificação da fase
-    fase_encoded = ohe.transform([[request.fase]]).toarray()
-    
-    # Hora senoidal
-    hora_sin = np.sin(2 * np.pi * request.hora / 24)
-    hora_cos = np.cos(2 * np.pi * request.hora / 24)
-    
-    # Pré-processamento
-    features = np.array([[request.temperatura, request.ph, request.tds, request.volume]])
-    features_scaled = scaler.transform(features)
-    
-    # Concatenação final
-    X = np.hstack([
-        features_scaled,
-        fase_encoded,
-        np.array([[hora_sin, hora_cos]])
-    ])
-    
-    # Predição
-    prob = model.predict(X, verbose=0)[0][0]
-    return {
-        "probabilidade": float(prob),
-        "status": "ALERTA" if prob > 0.5 else "OK"
-    }
+        # Pré-processamento
+        features = np.array([[temperatura, ph, tds, volume]])
+        features_scaled = scaler.transform(features)
+        fase_encoded = ohe.transform([[fase]])
+        sin_hora = np.sin(2 * np.pi * hora / 24)
+        cos_hora = np.cos(2 * np.pi * hora / 24)
 
-@app.get("/healthcheck")
+        # Combinação final
+        X = np.hstack([features_scaled, fase_encoded, [[sin_hora, cos_hora]]])
+
+        # Predição
+        prob = model.predict(X, verbose=0)[0][0]
+        return jsonify({
+            "probabilidade_ideal": round(float(prob), 3),
+            "status": "OK" if prob > 0.5 else "ALERTA"
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/healthcheck", methods=["GET"])
 def healthcheck():
-    return {"status": "online"}
+    return jsonify({"status": "online"})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000)

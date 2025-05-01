@@ -2,4 +2,6 @@ numpy==1.24.3
 pymongo==4.5.0
 scikit-learn==1.3.0
 joblib==1.3.2
-tensorflow-cpu==2.13.0
+tensorflow==2.13.0  # Atualizado para versão GPU
+matplotlib==3.7.1  # Adicionado para visualização de métricas
+keras-tuner==1.3.5

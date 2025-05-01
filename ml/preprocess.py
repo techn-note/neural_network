@@ -4,89 +4,73 @@ from pymongo import MongoClient
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 import os
 
-client = MongoClient(os.getenv("MONGO_URI"))
+client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017/"))
 db = client.piscicultura
 
 def load_data():
     leituras = list(db.leituras.find())
-    X = []
-    y = []
-    
+    X_num, fases, horas, Ys = [], [], [], []
+
     for doc in leituras:
-        try:
-            # Features
-            temp = doc['temperatura']
-            ph = doc['pH']
-            tds = doc['TDS']
-            vol = doc['volume']
-            fase = doc['faseId']
-            hora = doc['timestamp'].hour
-            
-            # Busca os dados do estágio
-            fase_info = db.estagios.find_one({"_id": fase})
-            if not fase_info:
-                print(f"Estágio {fase} não encontrado! Pulando leitura...")
-                continue
-
-            # Verifica campos obrigatórios
-            if not all(key in fase_info for key in ['temp_ideal', 'pH_ideal', 'tolerancias']):
-                print(f"Estágio {fase} com campos incompletos! Pulando...")
-                continue
-
-            # Label (0 = OK, 1 = ALERTA)
-            alerta = False
-            for param in ['temp', 'pH']:  # Campos corrigidos para match com data_generation.py
-                val = doc['temperatura' if param == 'temp' else 'pH']
-                ideal_low, ideal_high = fase_info[f"{param}_ideal"]
-                tol_low, tol_high = fase_info['tolerancias'][param]
-                
-                if not (tol_low <= val <= tol_high):
-                    alerta = True
-            
-            y.append(1 if alerta else 0)
-            X.append([temp, ph, tds, vol, fase, hora])
-        
-        except KeyError as e:
-            print(f"Documento inválido: campo {e} não encontrado. Pulando...")
+        e = db.estagios.find_one({'_id': doc['faseId']})
+        if not e:
             continue
-    
-    return np.array(X), np.array(y)
-def preprocess():
-    X, y = load_data()
-    
-    # Separa features
-    num_features = X[:, :4].astype(float)
-    fase = X[:, 4].reshape(-1, 1)
-    hora = X[:, 5].astype(int)
-    
-    # Normalização
-    scaler = MinMaxScaler()
-    num_scaled = scaler.fit_transform(num_features)
-    
-    # Codificação
-    ohe = OneHotEncoder(sparse_output=False)
-    fase_encoded = ohe.fit_transform(fase)
-    
-    # Hora senoidal
-    sin_hora = np.sin(2 * np.pi * hora / 24)
-    cos_hora = np.cos(2 * np.pi * hora / 24)
-    
-    # Combinação final
-    X_processed = np.hstack([
-        num_scaled,
-        fase_encoded,
-        sin_hora.reshape(-1, 1),
-        cos_hora.reshape(-1, 1)
-    ])
-    
-    # Salva artefatos
-    joblib.dump(scaler, 'scaler.pkl')
-    joblib.dump(ohe, 'ohe.pkl')
-    np.save('X.npy', X_processed)
-    np.save('y.npy', y)
-    
-    print("Pré-processamento concluído!")
-    return X_processed, y
+        # features numéricas
+        temp = doc['temperatura']; ph = doc['pH']
+        tds = doc['TDS']; vol = doc['volume']
+        hora = doc['timestamp'].hour
 
-if __name__ == "__main__":
+        # calcula score contínuo fuzzy
+        score = []
+        for param in ['temperatura','pH','TDS','volume']:
+            low_i, high_i = e['ranges'][param]['ideal']
+            low_t, high_t = e['ranges'][param]['tol']
+            val = doc[param]
+            if val < low_t or val > high_t:
+                s = 0.0
+            elif low_i <= val <= high_i:
+                s = 1.0
+            elif val < low_i:
+                s = (val - low_t) / (low_i - low_t)
+            else:
+                s = (high_t - val) / (high_t - high_i)
+            score.append(np.clip(s, 0, 1))
+
+        # y final como média dos scores
+        Ys.append(float(np.mean(score)))
+        X_num.append([temp, ph, tds, vol])
+        fases.append([doc['faseId']])
+        horas.append(hora)
+
+    return np.array(X_num), np.array(fases), np.array(horas), np.array(Ys)
+
+
+def preprocess():
+    X_num, fases, horas, y = load_data()
+
+    # normalização numérica
+    scaler = MinMaxScaler()
+    X_num_scaled = scaler.fit_transform(X_num)
+
+    # codifica estágio
+    ohe = OneHotEncoder(sparse_output=False)
+    X_fase = ohe.fit_transform(fases)
+
+    # hora cíclica
+    sin_h = np.sin(2 * np.pi * horas / 24)
+    cos_h = np.cos(2 * np.pi * horas / 24)
+
+    X = np.hstack([X_num_scaled, X_fase, sin_h.reshape(-1,1), cos_h.reshape(-1,1)])
+
+    # salva artefatos
+    os.makedirs('/app/artifacts', exist_ok=True)
+    joblib.dump(scaler, '/app/artifacts/scaler.pkl')
+    joblib.dump(ohe, '/app/artifacts/ohe.pkl')
+    np.save('/app/artifacts/X.npy', X)
+    np.save('/app/artifacts/y.npy', y)
+
+    print("Pré-processamento concluído! X shape:", X.shape)
+    return X, y
+
+if __name__ == '__main__':
     preprocess()
