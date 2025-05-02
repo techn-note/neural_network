@@ -3,7 +3,17 @@ FROM tensorflow/tensorflow:2.13.0-gpu
 WORKDIR /app
 
 COPY ./requirements.txt .
+
+RUN apt-get update && apt-get install -y \
+    libcairo2-dev \
+    pkg-config \
+    python3-dev \
+    libgirepository1.0-dev \
+    gir1.2-gtk-3.0 \
+    && apt-get clean
+
 RUN pip install --no-cache-dir -r requirements.txt
+
 
 COPY . /app
 

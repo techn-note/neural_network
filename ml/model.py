@@ -13,7 +13,7 @@ def build_model(input_dim: int) -> tf.keras.Model:
     model = tf.keras.Model(inputs, outputs)
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-        loss='mean_squared_error',  # para rótulos contínuos [0,1]
+        loss='mean_squared_error',
         metrics=['mae', 'mse']
     )
     return model

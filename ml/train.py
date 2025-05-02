@@ -16,7 +16,7 @@ y = np.load('/app/artifacts/y.npy')
 
 # split
 X_train, X_val, y_train, y_val = train_test_split(
-    X, y, test_size=0.3, random_state=42
+    X, y, test_size=0.4, random_state=42
 )
 
 # cria modelo

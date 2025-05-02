@@ -105,9 +105,9 @@ def generate_data(n_por_estagio, prob_alerta, tanque_id="tanque_01"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n_por_estagio", type=int, default=20000,
+    parser.add_argument("--n_por_estagio", type=int, default=100000,
                         help="Número de leituras geradas por estágio")
-    parser.add_argument("--prob_alerta",  type=float, default=0.2,
+    parser.add_argument("--prob_alerta",  type=float, default=0.35,
                         help="Probabilidade de gerar alerta")
     args = parser.parse_args()
 
