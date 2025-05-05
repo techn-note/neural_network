@@ -10,16 +10,16 @@ if gpus:
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
 
-# carrega dados
+# carrega dados pré-processados
 X = np.load('/app/artifacts/X.npy')
-y = np.load('/app/artifacts/y.npy')
+y = np.load('/app/artifacts/y.npy')  # shape (n_amostras, 4)
 
 # split
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.4, random_state=42
 )
 
-# cria modelo
+# cria modelo com a nova arquitetura
 model = build_model(X_train.shape[1])
 
 # callbacks
@@ -38,7 +38,7 @@ history = model.fit(
     callbacks=callbacks
 )
 
-# salva
+# salva artefatos
 model.save('/app/artifacts/modelo_tilapia.h5')
 np.save('/app/artifacts/history.npy', history.history)
 print("Treino concluído, artefatos salvos.")

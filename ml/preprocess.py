@@ -20,8 +20,8 @@ def load_data():
         tds = doc['TDS']; vol = doc['volume']
         hora = doc['timestamp'].hour
 
-        # calcula score contínuo fuzzy
-        score = []
+        # calcula score fuzzy para cada parâmetro
+        scores = []
         for param in ['temperatura','pH','TDS','volume']:
             low_i, high_i = e['ranges'][param]['ideal']
             low_t, high_t = e['ranges'][param]['tol']
@@ -34,16 +34,14 @@ def load_data():
                 s = (val - low_t) / (low_i - low_t)
             else:
                 s = (high_t - val) / (high_t - high_i)
-            score.append(np.clip(s, 0, 1))
+            scores.append(np.clip(s, 0, 1))
 
-        # y final como média dos scores
-        Ys.append(float(np.mean(score)))
+        Ys.append(scores)  # vetor de 4 scores
         X_num.append([temp, ph, tds, vol])
         fases.append([doc['faseId']])
         horas.append(hora)
 
     return np.array(X_num), np.array(fases), np.array(horas), np.array(Ys)
-
 
 def preprocess():
     X_num, fases, horas, y = load_data()
@@ -67,9 +65,9 @@ def preprocess():
     joblib.dump(scaler, '/app/artifacts/scaler.pkl')
     joblib.dump(ohe, '/app/artifacts/ohe.pkl')
     np.save('/app/artifacts/X.npy', X)
-    np.save('/app/artifacts/y.npy', y)
+    np.save('/app/artifacts/y.npy', y)  # agora shape (n_amostras, 4)
 
-    print("Pré-processamento concluído! X shape:", X.shape)
+    print(f"Pré-processamento concluído! X shape: {X.shape}, y shape: {y.shape}")
     return X, y
 
 if __name__ == '__main__':
