@@ -1,44 +1,57 @@
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, f1_score
 from model import build_model
-import os
 
-# GPU config
+# Configuração de GPU
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
 
-# carrega dados
-X = np.load('/app/artifacts/X.npy')
-y = np.load('/app/artifacts/y.npy')
+# Carrega dados
+X = np.load('artifacts/X.npy')
+y = np.load('artifacts/y.npy')
 
-# split
+# Split
 X_train, X_val, y_train, y_val = train_test_split(
-    X, y, test_size=0.4, random_state=42
+    X, y, test_size=0.3, random_state=42, stratify=y
 )
 
-# cria modelo
-model = build_model(X_train.shape[1])
+# Cria modelo
+model = build_model(input_dim=X_train.shape[1], num_classes=y.shape[1])
 
-# callbacks
+# Callbacks
 callbacks = [
     tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True),
     tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5),
-    tf.keras.callbacks.ModelCheckpoint('/app/artifacts/best_model.h5', save_best_only=True)
+    tf.keras.callbacks.ModelCheckpoint('artifacts/best_model.h5', save_best_only=True)
 ]
 
-# treina
+# Treina
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=100,
+    epochs=10,
     batch_size=64,
     callbacks=callbacks
 )
 
-# salva
-model.save('/app/artifacts/modelo_tilapia.h5')
-np.save('/app/artifacts/history.npy', history.history)
-print("Treino concluído, artefatos salvos.")
+# Avaliação final
+val_loss, val_acc, val_prec, val_rec = model.evaluate(X_val, y_val, verbose=0)
+print(f"Validation - Loss: {val_loss:.4f}, Accuracy: {val_acc:.4f}, Precision: {val_prec:.4f}, Recall: {val_rec:.4f}")
+
+# Classification report e F1
+y_pred_prob = model.predict(X_val)
+y_pred = np.argmax(y_pred_prob, axis=1)
+y_true = np.argmax(y_val, axis=1)
+print("Classification Report:")
+print(classification_report(y_true, y_pred, target_names=["Crise","Alerta","Normal"]))
+f1 = f1_score(y_true, y_pred, average='weighted')
+print(f"Weighted F1-score: {f1:.4f}")
+
+# Salva artefatos
+model.save('artifacts/fish_quality_classifier.h5')
+np.save('artifacts/history.npy', history.history)
+print("Treino concluído e artefatos salvos em artifacts/")

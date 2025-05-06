@@ -1,0 +1,72 @@
+[
+    {
+      "estagio": "alevino",
+      "ranges": {
+        "temperatura": {
+          "min": 25,
+          "ideal_min": 25,
+          "ideal_max": 32,
+          "max": 32
+        },
+        "ph": {
+          "min": 6.0,
+          "ideal_min": 6.0,
+          "ideal_max": 8.5,
+          "max": 8.5
+        },
+        "tds": {
+          "min": 1.0,
+          "ideal_min": 1.0,
+          "ideal_max": 25.0,
+          "max": 25.0
+        }
+      }
+    },
+    {
+      "estagio": "juvenil",
+      "ranges": {
+        "temperatura": {
+          "min": 27,
+          "ideal_min": 27,
+          "ideal_max": 32,
+          "max": 32
+        },
+        "ph": {
+          "min": 6.0,
+          "ideal_min": 6.0,
+          "ideal_max": 8.5,
+          "max": 8.5
+        },
+        "tds": {
+          "min": 1.0,
+          "ideal_min": 1.0,
+          "ideal_max": 25.0,
+          "max": 25.0
+        }
+      }
+    },
+    {
+      "estagio": "engorda",
+      "ranges": {
+        "temperatura": {
+          "min": 26,
+          "ideal_min": 26,
+          "ideal_max": 30,
+          "max": 30
+        },
+        "ph": {
+          "min": 6.0,
+          "ideal_min": 6.0,
+          "ideal_max": 8.5,
+          "max": 8.5
+        },
+        "tds": {
+          "min": 1.0,
+          "ideal_min": 1.0,
+          "ideal_max": 25.0,
+          "max": 25.0
+        }
+      }
+    }
+  ]
+  
