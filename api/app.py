@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 # Carrega artefatos
 scaler = joblib.load('/app/artifacts/scaler.pkl')
-model  = tf.keras.models.load_model('/app/artifacts/fish_quality_classifier.h5')
+model  = tf.keras.models.load_model('/app/artifacts/safira.h5')
 
 # Carrega configuração de estágios para fuzzy
 cfg_path = os.getenv('ESTAGIOS_CONFIG','ml/estagios_config.json')
@@ -36,6 +36,18 @@ def predict():
         # Pré-processamento simples: apenas scale numérico
         features = np.array([[temp, ph, tds]])
         X_input = scaler.transform(features)
+
+        # Adiciona a fase ao vetor de entrada
+        fase = data['fase']
+        fase_encoded = np.zeros(len(ESTAGIOS))  # Vetor one-hot para fases
+        if fase in ESTAGIOS:
+            fase_index = list(ESTAGIOS.keys()).index(fase)
+            fase_encoded[fase_index] = 1
+        else:
+            raise ValueError(f"Fase desconhecida: {fase}")
+
+        # Concatena as features numéricas com a fase codificada
+        X_input = np.hstack([X_input, fase_encoded.reshape(1, -1)])
 
         # Predição Softmax
         probs = model.predict(X_input, verbose=0)[0]

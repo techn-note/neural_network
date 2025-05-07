@@ -3,6 +3,7 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, f1_score
 from model import build_model
+from collections import Counter
 
 # Configuração de GPU
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -16,8 +17,18 @@ y = np.load('artifacts/y.npy')
 
 # Split
 X_train, X_val, y_train, y_val = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
+    X, y, test_size=0.35, random_state=42, stratify=y
 )
+
+# Verifica a distribuição das classes após o split
+def print_class_distribution(y, dataset_name):
+    class_counts = Counter(np.argmax(y, axis=1))
+    print(f"Distribuição de classes em {dataset_name}:")
+    for class_label, count in class_counts.items():
+        print(f"Classe {class_label}: {count} amostras")
+
+print_class_distribution(y_train, "Treinamento")
+print_class_distribution(y_val, "Validação")
 
 # Cria modelo
 model = build_model(input_dim=X_train.shape[1], num_classes=y.shape[1])
@@ -33,7 +44,7 @@ callbacks = [
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=10,
+    epochs=100,
     batch_size=64,
     callbacks=callbacks
 )
@@ -52,6 +63,6 @@ f1 = f1_score(y_true, y_pred, average='weighted')
 print(f"Weighted F1-score: {f1:.4f}")
 
 # Salva artefatos
-model.save('artifacts/fish_quality_classifier.h5')
+model.save('artifacts/safira.h5')
 np.save('artifacts/history.npy', history.history)
 print("Treino concluído e artefatos salvos em artifacts/")

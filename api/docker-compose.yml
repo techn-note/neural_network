@@ -6,8 +6,10 @@ services:
     networks:
       - neural_network_net
     volumes:
-      - "C:/Users/Eliharison/Documents/GitHub/neural_network/artifacts:/app/artifacts" 
+      - "C:/Users/Eliharison/Documents/GitHub/neural_network/artifacts:/app/artifacts"
+      - ../ml/estagios_config.json:/app/ml/estagios_config.json 
     environment:
+      ESTAGIOS_CONFIG: /app/ml/estagios_config.json
       MONGO_URI: mongodb://mongo:27017/ 
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility

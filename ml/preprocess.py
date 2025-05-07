@@ -19,7 +19,7 @@ def load_data():
         X_num.append([
             doc.get('temperatura', 0.0),
             doc.get('ph', 0.0),
-            doc.get('tds', 1.0)  # garante mínimo
+            doc.get('tds', 1.0)  
         ])
         fases.append(doc.get('faseId'))
         Ys.append(doc.get('class'))
