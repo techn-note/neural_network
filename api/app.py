@@ -51,7 +51,7 @@ def predict():
 
         # Predição Softmax
         probs = model.predict(X_input, verbose=0)[0]
-        classes = ['Crise', 'Alerta', 'Normal']
+        classes = ['Crise', 'Anormal', 'Normal']
         prob_dict = {c: round(float(p), 3) for c, p in zip(classes, probs)}
         pred_class = classes[np.argmax(probs)]
 

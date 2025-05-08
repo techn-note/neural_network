@@ -58,7 +58,7 @@ y_pred_prob = model.predict(X_val)
 y_pred = np.argmax(y_pred_prob, axis=1)
 y_true = np.argmax(y_val, axis=1)
 print("Classification Report:")
-print(classification_report(y_true, y_pred, target_names=["Crise","Alerta","Normal"]))
+print(classification_report(y_true, y_pred, target_names=["Crise","Anormal","Normal"]))
 f1 = f1_score(y_true, y_pred, average='weighted')
 print(f"Weighted F1-score: {f1:.4f}")
 

@@ -23,21 +23,21 @@ plt.figure(); plt.plot(hist['accuracy'],label='train_acc'); plt.plot(hist['val_a
 # 2. Confusion Matrix
 y_pred=np.argmax(model.predict(Xte),axis=1); y_true=np.argmax(yte,axis=1)
 cm=confusion_matrix(y_true,y_pred)
-plt.figure(figsize=(6,5)); sns.heatmap(cm,annot=True,fmt='d',cmap='Blues',xticklabels=['Crise','Alerta','Normal'],yticklabels=['Crise','Alerta','Normal']); plt.ylabel('True'); plt.xlabel('Pred'); plt.savefig(os.path.join(output_dir, 'confusion_matrix.png')); plt.close()
+plt.figure(figsize=(6,5)); sns.heatmap(cm,annot=True,fmt='d',cmap='Blues',xticklabels=['Crise','Anormal','Normal'],yticklabels=['Crise','Anormal','Normal']); plt.ylabel('True'); plt.xlabel('Pred'); plt.savefig(os.path.join(output_dir, 'confusion_matrix.png')); plt.close()
 
 # Normalized Confusion Matrix
 cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-plt.figure(figsize=(6,5)); sns.heatmap(cm_normalized,annot=True,fmt='.2f',cmap='Blues',xticklabels=['Crise','Alerta','Normal'],yticklabels=['Crise','Alerta','Normal']); plt.ylabel('True'); plt.xlabel('Pred'); plt.title('Normalized Confusion Matrix'); plt.savefig(os.path.join(output_dir, 'confusion_matrix_normalized.png')); plt.close()
+plt.figure(figsize=(6,5)); sns.heatmap(cm_normalized,annot=True,fmt='.2f',cmap='Blues',xticklabels=['Crise','Anormal','Normal'],yticklabels=['Crise','Anormal','Normal']); plt.ylabel('True'); plt.xlabel('Pred'); plt.title('Normalized Confusion Matrix'); plt.savefig(os.path.join(output_dir, 'confusion_matrix_normalized.png')); plt.close()
 
 # 3. Classification Report
-print('Classification Report:\n',classification_report(y_true,y_pred,target_names=['Crise','Alerta','Normal']))
+print('Classification Report:\n',classification_report(y_true,y_pred,target_names=['Crise','Anormal','Normal']))
 
 # Balanced Accuracy
 balanced_acc = balanced_accuracy_score(y_true, y_pred)
 print(f'Balanced Accuracy: {balanced_acc:.2f}')
 
 # 4. ROC and AUC Curves
-classes = ['Crise', 'Alerta', 'Normal']
+classes = ['Crise', 'Anormal', 'Normal']
 yte_binarized = label_binarize(yte, classes=[0, 1, 2])
 n_classes = yte_binarized.shape[1]
 
