@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    networks:
+      - neural_network_net
+    volumes:
+      - ../artifacts:/app/artifacts
+      - ./estagios_config.json:/app/estagios_config.json
+    environment:
+      ESTAGIOS_CONFIG: /app/estagios_config.json
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+networks:
+  neural_network_net:
+    driver: bridge
