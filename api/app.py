@@ -7,7 +7,7 @@ scaler = joblib.load('/app/artifacts/scaler.pkl')
 model  = tf.keras.models.load_model('/app/artifacts/safira.h5')
 
 # Carrega configuração de estágios para fuzzy
-cfg_path = os.getenv('ESTAGIOS_CONFIG','ml/estagios_config.json')
+cfg_path = os.getenv('ESTAGIOS_CONFIG','/app/estagios_config.json')
 ESTAGIOS = {e['estagio']: e for e in json.load(open(cfg_path))}
 
 # SHAP background (apenas features numéricas)
