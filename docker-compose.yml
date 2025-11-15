@@ -1,0 +1,14 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile.api
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/healthcheck"]
+      interval: 30s
+      timeout: 5s
+    environment:
+      - ESTAGIOS_CONFIG=/app/estagios_config.json

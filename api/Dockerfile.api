@@ -1,22 +1,28 @@
-FROM tensorflow/tensorflow:2.13.0
-
+# ---------- Build Stage ----------
+FROM python:3.9-slim AS builder
 WORKDIR /app
 
-COPY ./requirements.txt .
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gcc \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y \
-    libcairo2-dev \
-    pkg-config \
-    python3-dev \
-    libgirepository1.0-dev \
-    gir1.2-gtk-3.0 \
-    && apt-get clean
-
+COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# ---------- Runtime Stage ----------
+FROM python:3.9-slim AS runtime
+WORKDIR /app
 
-COPY . /app
+# Copia pacotes e executáveis (site‑packages + /usr/local/bin)
+COPY --from=builder /usr/local /usr/local
+
+# Copia aplicação e artefatos
+COPY api/ /app/
+COPY artifacts/ /app/artifacts
+COPY api/estagios_config.json /app/estagios_config.json
 
 EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s \
+  CMD curl -f http://127.0.0.1:8000/healthcheck || exit 1
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=8000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app", "--workers", "1"]

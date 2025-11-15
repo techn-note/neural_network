@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Serviço da API Neural Network (porta 8000)
+  neural-api:
+    build:
+      context: ./neural_network
+      dockerfile: api/Dockerfile.api
+    container_name: neural-api
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      - ESTAGIOS_CONFIG=/app/estagios_config.json
+    networks:
+      - aquasense-network
+
+  # Serviço da API Aquasense (porta 5000)
+  aquasense-api:
+    build:
+      context: ./Aquasense-API
+      dockerfile: Dockerfile
+    container_name: aquasense-api
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    environment:
+      # URL da neural-api (usando nome do serviço Docker)
+      - NEURAL_API_URL=http://neural-api:8000
+      - FLASK_ENV=production
+    depends_on:
+      neural-api:
+        condition: service_healthy
+    networks:
+      - aquasense-network
+
+networks:
+  aquasense-network:
+    driver: bridge
